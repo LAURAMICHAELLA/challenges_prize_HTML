@@ -349,170 +349,144 @@
 </div>
 
 <script>
-    let desafios = [
-        { title: "Desafio 1: Semáforo Inteligente para Pedestres", desc: "Ao pressionar o botão, um temporizador (TON) aguarda 5s antes de fechar o sinal dos carros e abrir o de pedestres por 10s. Uma memória impede acionamentos repetidos." },
-        { title: "Desafio 2: Controle de Vagas de Estacionamento", desc: "Um contador UP/DOWN (CTUD) registra entradas e saídas. Ao atingir o limite (15 carros), uma memória aciona a sinalização de 'LOTADO' e bloqueia a entrada." },
-        { title: "Desafio 3: Porta Automática com Trava Noturna", desc: "Um sensor de presença aciona um temporizador (TOF) mantendo a porta aberta por 4s. Uma chave de 'Modo Noturno' (memória) bloqueia o sensor e trava a porta." },
-        { title: "Desafio 4: Secador de Mãos Automático", desc: "O sensor aciona o soprador imediatamente. Se um objeto estático for detectado por mais de 15s, um temporizador de segurança (TON) desliga o motor." },
-        { title: "Desafio 5: Catraca de Metrô com Timeout", desc: "A leitura do cartão libera a trava. Um contador registra os passageiros. Se a catraca não for girada em 7s, o temporizador expira e a trava é reativada." },
-        { title: "Desafio 6: Escada Rolante Economizadora", desc: "O sensor de entrada liga a escada. Um temporizador (TOF) de 20s mantém a escada rodando. Cada nova passagem reinicia a contagem de tempo." },
-        { title: "Desafio 7: Iluminação Temporizada de Garagem", desc: "A abertura do portão liga as luzes por 3 minutos (TOF). Se um botão de emergência for ativado (memória), a iluminação permanece acesa continuamente." },
-        { title: "Desafio 8: Irrigação Automática em Sequência", desc: "Um temporizador aciona a válvula 1 por 10s. Ao finalizar, ativa automaticamente a válvula 2 por 10s. Um contador acumula o total de ciclos executados." },
-        { title: "Desafio 9: Misturador Automático de Café", desc: "Selecionada a bebida, a válvula de água abre por 3s (TON). Em seguida, aciona-se o misturador por 5s. Uma memória impede um novo ciclo até a retirada do copo." },
-        { title: "Desafio 10: Ciclos de Lava-Jato Automático", desc: "Temporizadores em cascata controlam: 5s Água -> 8s Sabão -> 5s Enxágue -> 10s Secador. Um contador geral contabiliza a quantidade de veículos lavados." },
-        { title: "Desafio 11: Cancelas Duplas (Gaiola de Segurança)", desc: "O acionamento da Porta A impede (via memória de interlock) a abertura da Porta B. A Porta B só pode abrir 3s após a Porta A estar totalmente fechada." },
-        { title: "Desafio 12: Reservatório com Alternância de Bombas", desc: "Sensor de nível mínimo ativa o sistema. Um contador de pulsos alterna a chamada: ciclo ímpar ativa a Bomba 1, ciclo par ativa a Bomba 2." },
-        { title: "Desafio 13: Alarme Residencial Temporizado", desc: "Ao armar (memória), dá 15s para a saída. Ao detectar entrada, aguarda 10s para digitação de senha. Caso o tempo expire sem reset, a sirene toca." },
-        { title: "Desafio 14: Exaustor de Banheiro Comercial", desc: "A chave aciona a luz e o exaustor. Ao desligar a luz, uma memória dispara um temporizador (TOF) mantendo o exaustor ligado por mais 30s." },
-        { title: "Desafio 15: Misturador de Tintas por Pulsação", desc: "O operador escolhe o tempo total. O motor opera de forma pulsante (2s ligado, 1s desligado) em malha fechada até o tempo final expirar." },
-        { title: "Desafio 16: Esteira de Bagagens com Auto-Stop", desc: "Cada mala aciona um sensor fotoelétrico alimentando um temporizador (TOF) de 30s. Um contador registra a quantidade. Sem malas por 30s, a esteira para." },
-        { title: "Desafio 17: Elevador de Cargas de 2 Andares", desc: "Chamar no andar liga o motor no sentido correto até o fim de curso. Uma memória impede reversão abrupta e exige validação de porta fechada." },
-        { title: "Desafio 18: Compactador de Lixo Automático", desc: "Um sensor conta a entrada de 5 sacos (CTU). Ao atingir a contagem, a prensa avança (5s) e recua (5s), resetando o contador automaticamente." },
-        { title: "Desafio 19: Luzes de Emergência com Autoteste", desc: "Em operação normal, o sistema fica em espera. Um temporizador gera um ciclo automático de teste a cada 60s, acendendo as luzes por 3s." },
-        { title: "Desafio 20: Alimentador Automático para PETs", desc: "Um temporizador oscilador gera o intervalo entre refeições. Ao atingir o tempo, ativa a rosca sem-fim por 3s. Um contador limita a 4 dosagens diárias." }
+    // Cole aqui a URL gerada na implantação do seu Google Apps Script
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4I9Z7FxXWQIIa6P11qbgmV5GIrj0Z4TPQAcJNgMrMxt79wi5FTgjzBbjXe7j8MVbd7A/exec";
+
+    // Lista fixa de desafios disponíveis
+    const desafiosTotais = [
+        "Desafio 01: Semáforo de Cruzamento com Sensor de Presença",
+        "Desafio 02: Esteira Seletora de Caixas por Tamanho",
+        "Desafio 03: Controle de Nível de Reservatório de Água",
+        "Desafio 04: Sistema de Alarme com Chaveiro RFID e Barreira IR",
+        "Desafio 05: Portão Eletrônico Industrial com Fim de Curso",
+        "Desafio 06: Controle de Temperatura de Forno com Exaustor",
+        "Desafio 07: Sistema de Mistura e Envasamento de Alimentos",
+        "Desafio 08: Estacionamento Automatizado com Contador de Vagas"
     ];
 
-    let historicoSorteios = [];
-    let alunosRegistrados = new Set(); // Guarda os nomes normalizados de quem já participou
+    let registrosNaNuvem = [];
 
-    function cleanName(name) {
-        return name.toLowerCase().trim().replace(/\s+/g, ' ');
-    }
+    // 1. Carrega o estado atual da planilha ao abrir a página
+    async function carregarDadosDoSheets() {
+        const statusEl = document.getElementById('status-conexao');
+        if(statusEl) statusEl.innerText = "Sincronizando com a nuvem...";
 
-    function toggleMember2(show) {
-        const groupStudent2 = document.getElementById('groupStudent2');
-        const student2Input = document.getElementById('student2');
-        if (show) {
-            groupStudent2.style.display = 'block';
-            student2Input.required = true;
-        } else {
-            groupStudent2.style.display = 'none';
-            student2Input.required = false;
-            student2Input.value = '';
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const dados = await response.json();
+            registrosNaNuvem = dados;
+            atualizarContador();
+            if(statusEl) statusEl.innerText = "Conectado ao Google Sheets ✓";
+        } catch (error) {
+            console.error("Erro ao carregar dados:", error);
+            if(statusEl) statusEl.innerText = "Modo Offline (Verifique o SCRIPT_URL)";
         }
     }
 
-    function toggleTeacherPanel() {
-        const panel = document.getElementById('teacherPanel');
-        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    // 2. Normaliza os nomes para evitar duplicidades em ordens diferentes (ex: "Ana e João" vs "João e Ana")
+    function normalizarEquipe(nome) {
+        return nome.toLowerCase()
+                   .replace(/\s+/g, '')
+                   .split(/e|&|\+|,/)
+                   .sort()
+                   .join('');
     }
 
-    function resetView() {
-        document.getElementById('resultCard').style.display = 'none';
-        document.getElementById('registrationForm').style.display = 'block';
-        document.getElementById('student1').value = '';
-        document.getElementById('student2').value = '';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 3. Atualiza o contador de desafios restantes
+    function atualizarContador() {
+        const desafiosOcupados = registrosNaNuvem.map(r => r.desafio);
+        const restantes = desafiosTotais.length - desafiosOcupados.length;
+        const badge = document.getElementById('counter-badge');
+        if(badge) {
+            badge.innerText = `Desafios Restantes: ${restantes} de ${desafiosTotais.length}`;
+        }
     }
 
-    document.getElementById('registrationForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+    // 4. Executa o sorteio e grava na planilha
+    async function sortearDesafio() {
+        const inputEquipe = document.getElementById('equipeInput');
+        const nomeEquipe = inputEquipe.value.trim();
 
-        if (desafios.length === 0) {
-            alert("Todos os desafios já foram sorteados!");
+        if (!nomeEquipe) {
+            alert("Por favor, digite o nome do integrante ou da dupla.");
             return;
         }
 
-        const isDuo = document.querySelector('input[name="modality"]:checked').value === 'duo';
-        const raw1 = document.getElementById('student1').value;
-        const raw2 = document.getElementById('student2').value;
+        const btn = document.getElementById('btnSortear');
+        btn.disabled = true;
+        btn.innerText = "Sorteando e registrando...";
 
-        const s1Clean = cleanName(raw1);
-        const s2Clean = isDuo ? cleanName(raw2) : null;
+        // Atualiza os dados antes de sortear para evitar colisão
+        await carregarDadosDoSheets();
 
-        // Validação de nomes repetidos no mesmo formulário
-        if (isDuo && s1Clean === s2Clean) {
-            alert("Os nomes dos dois integrantes da dupla não podem ser iguais!");
+        // Verifica se a equipe já possui registro
+        const chaveEquipe = normalizarEquipe(nomeEquipe);
+        const jaRegistrado = registrosNaNuvem.find(r => normalizarEquipe(r.equipe) === chaveEquipe);
+
+        if (jaRegistrado) {
+            exibirResultado(jaRegistrado.equipe, jaRegistrado.desafio, true);
+            btn.disabled = false;
+            btn.innerText = "Sortear Desafio";
             return;
         }
 
-        // Validação contra o registro histórico (em qualquer ordem)
-        if (alunosRegistrados.has(s1Clean)) {
-            alert(`O aluno "${raw1}" já cadastrou um desafio!`);
+        // Filtra os desafios ainda disponíveis
+        const desafiosOcupados = registrosNaNuvem.map(r => r.desafio);
+        const disponiveis = desafiosTotais.filter(d => !desafiosOcupados.includes(d));
+
+        if (disponiveis.length === 0) {
+            alert("Todos os desafios já foram distribuídos para a turma!");
+            btn.disabled = false;
+            btn.innerText = "Sortear Desafio";
             return;
         }
-        if (isDuo && alunosRegistrados.has(s2Clean)) {
-            alert(`O aluno "${raw2}" já cadastrou um desafio!`);
-            return;
+
+        // Sorteio aleatório
+        const indiceSorteado = Math.floor(Math.random() * disponiveis.length);
+        const desafioSorteado = disponiveis[indiceSorteado];
+
+        // Envia para o Google Sheets
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    equipe: nomeEquipe,
+                    desafio: desafioSorteado
+                })
+            });
+
+            // Atualiza memória local e UI
+            registrosNaNuvem.push({ equipe: nomeEquipe, desafio: desafioSorteado });
+            atualizarContador();
+            exibirResultado(nomeEquipe, desafioSorteado, false);
+        } catch (err) {
+            alert("Erro ao salvar o desafio. Tente novamente.");
+            console.error(err);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Sortear Desafio";
         }
-
-        // Registrar alunos no controle de duplicidade
-        alunosRegistrados.add(s1Clean);
-        if (isDuo) alunosRegistrados.add(s2Clean);
-
-        // Sorteio
-        const randomIndex = Math.floor(Math.random() * desafios.length);
-        const selectedChallenge = desafios.splice(randomIndex, 1)[0];
-
-        // Histórico
-        const integrantes = isDuo ? `${raw1.trim()} e ${raw2.trim()}` : raw1.trim();
-        historicoSorteios.push({
-            id: historicoSorteios.length + 1,
-            modalidade: isDuo ? "Dupla" : "Individual",
-            integrantes: integrantes,
-            desafio: selectedChallenge.title
-        });
-
-        // Interface
-        document.getElementById('availableCount').innerText = desafios.length;
-
-        if (desafios.length === 0) {
-            const btn = document.getElementById('btnSubmit');
-            btn.disabled = true;
-            btn.innerText = "Todos os Desafios Foram Sorteados";
-        }
-
-        document.getElementById('resTeam').innerHTML = isDuo 
-            ? `👥 Dupla Registrada: <span style="color:var(--accent)">${raw1.trim()}</span> e <span style="color:var(--accent)">${raw2.trim()}</span>`
-            : `👤 Aluno Registrado: <span style="color:var(--accent)">${raw1.trim()}</span>`;
-        document.getElementById('resChallengeTitle').innerText = selectedChallenge.title;
-        document.getElementById('resChallengeDesc').innerText = selectedChallenge.desc;
-
-        document.getElementById('registrationForm').style.display = 'none';
-        const resultCard = document.getElementById('resultCard');
-        resultCard.style.display = 'block';
-        resultCard.scrollIntoView({ behavior: 'smooth' });
-
-        renderTable();
-    });
-
-    function renderTable() {
-        const tbody = document.getElementById('historyTableBody');
-        tbody.innerHTML = '';
-
-        historicoSorteios.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${item.id}</td>
-                <td>${item.modalidade}</td>
-                <td>${item.integrantes}</td>
-                <td>${item.desafio}</td>
-            `;
-            tbody.appendChild(tr);
-        });
     }
 
-    function exportToCSV() {
-        if (historicoSorteios.length === 0) {
-            alert("Nenhum dado registrado para exportar!");
-            return;
+    // 5. Exibe a tela com o resultado do sorteio
+    function exibirResultado(equipe, desafio, jaExistia) {
+        document.getElementById('form-section').style.display = 'none';
+        const resultSection = document.getElementById('result-section');
+        resultSection.style.display = 'block';
+
+        document.getElementById('resEquipe').innerText = equipe;
+        document.getElementById('resDesafio').innerText = desafio;
+
+        const aviso = document.getElementById('resAviso');
+        if (aviso) {
+            aviso.innerText = jaExistia ? "⚠️ Esta equipe já realizou o sorteio anteriormente." : "✅ Desafio registrado com sucesso!";
         }
-
-        let csvContent = "data:text/csv;charset=utf-8,ID,Modalidade,Integrantes,Desafio Sorteado\n";
-
-        historicoSorteios.forEach(item => {
-            csvContent += `${item.id},"${item.modalidade}","${item.integrantes}","${item.desafio}"\n`;
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "relatorio_desafios_mastertool.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     }
+
+    // Carrega os registros ao abrir a página
+    window.onload = carregarDadosDoSheets;
 </script>
-
 </body>
 </html>
