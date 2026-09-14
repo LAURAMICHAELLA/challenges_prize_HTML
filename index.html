@@ -33,7 +33,7 @@
             align-items: center;
             min-height: 100vh;
             padding: 10px;
-			overflow-y: auto;
+            overflow-y: auto;
         }
 
         .container {
@@ -241,55 +241,50 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-		.subtitle {
-			text-align: center;
-		}
-		.logo-ifam {
-			display: block;          /* Transforma a imagem em bloco para permitir centralização */
-			margin: 0 auto 15px auto;/* '0 auto' centraliza na horizontal; 15px afasta do título */
-			max-width: 100px;        /* Controle o tamanho da logo aqui (ex: 80px, 100px, 120px) */
-			height: auto;            /* Mantém a proporção da imagem sem distorcer */
-		}
-		/* Ajustes exclusivos para telas pequenas (Celulares) */
-	@media (max-width: 600px) {
-		body {
-			overflow-y: auto !important; /* Libera a rolagem no celular */
-			padding: 10px;
-		}
-    
-		.container {
-			padding: 15px; /* Reduz espaçamento interno no celular */
-		}
 
-		/* Permite rolagem horizontal na tabela do professor no celular */
-    .teacher-panel {
-        overflow-x: auto; 
-    }
-}
+        .logo-ifam {
+            display: block;
+            margin: 0 auto 15px auto;
+            max-width: 100px;
+            height: auto;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                overflow-y: auto !important;
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            .teacher-panel {
+                overflow-x: auto; 
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-	<!-- Logo do IFAM -->
     <img src="logo_cmdi.jpeg" alt="Logo IFAM" class="logo-ifam">
     <h1>Portal de Microcontroladores e CLP</h1>
-	<h2 class="subtitle">Profa. Dra. Laura Michaella </h2>
-	<p class="subtitle" style="line-height: 1.2; margin-bottom: 5px; text-align: center;">
-    Registro de Equipe &amp; Sorteio Exclusivo de Desafios (utilizando o Simulador MasterTool Altus) </p>
-	<p class="subtitle" style="line-height: 1.2; margin-top: 0; text-align: center;">
-    Disciplina Microcontroladores e CLP - TURMA EIMEC 31 </p>
-    
+    <h2 class="subtitle">Profa. Dra. Laura Michaella</h2>
+    <p class="subtitle" style="line-height: 1.2; margin-bottom: 5px;">
+        Registro de Equipe &amp; Sorteio Exclusivo de Desafios (utilizando o Simulador MasterTool Altus)
+    </p>
+    <p class="subtitle" style="line-height: 1.2; margin-top: 0;">
+        Disciplina Microcontroladores e CLP - TURMA EIMEC 31
+    </p>
     
     <div class="counter-badge">
-        Desafios Disponíveis: <span id="availableCount">20</span> / 20
+        Desafios Disponíveis: <span id="availableCount">8</span> / <span id="totalCount">8</span>
     </div>
-	
-	<div class="counter-badge">
-	<p class="subtitle">Playlist para aprender a utilizar o simulador do CLP real (visto no laboratório), o qual deve ser utilizado para desenvolvimento dos desafios (aula 1- 35)</p>
-	<a href="https://www.youtube.com/playlist?list=PLyXOhZvvjr-_B7MHgY0eeg9qV8zPzKXg0">Clique aqui</a>
-	</div>
-	
+    
+    <div class="counter-badge">
+        <p class="subtitle" style="margin-bottom: 5px;">Playlist para aprender a utilizar o simulador do CLP real (visto no laboratório):</p>
+        <a href="https://www.youtube.com/playlist?list=PLyXOhZvvjr-_B7MHgY0eeg9qV8zPzKXg0" target="_blank" style="color: var(--accent);">Clique aqui para acessar</a>
+    </div>
+    
     <form id="registrationForm">
         <div class="form-group">
             <label>Modalidade de Trabalho:</label>
@@ -349,10 +344,8 @@
 </div>
 
 <script>
-    // Cole aqui a URL gerada na implantação do seu Google Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4I9Z7FxXWQIIa6P11qbgmV5GIrj0Z4TPQAcJNgMrMxt79wi5FTgjzBbjXe7j8MVbd7A/exec";
 
-    // Lista fixa de desafios disponíveis
     const desafiosTotais = [
         "Desafio 01: Semáforo de Cruzamento com Sensor de Presença",
         "Desafio 02: Esteira Seletora de Caixas por Tamanho",
@@ -366,24 +359,33 @@
 
     let registrosNaNuvem = [];
 
-    // 1. Carrega o estado atual da planilha ao abrir a página
-    async function carregarDadosDoSheets() {
-        const statusEl = document.getElementById('status-conexao');
-        if(statusEl) statusEl.innerText = "Sincronizando com a nuvem...";
-
-        try {
-            const response = await fetch(SCRIPT_URL);
-            const dados = await response.json();
-            registrosNaNuvem = dados;
-            atualizarContador();
-            if(statusEl) statusEl.innerText = "Conectado ao Google Sheets ✓";
-        } catch (error) {
-            console.error("Erro ao carregar dados:", error);
-            if(statusEl) statusEl.innerText = "Modo Offline (Verifique o SCRIPT_URL)";
+    // Alternar visibilidade do campo do Aluno 2
+    function toggleMember2(show) {
+        const group2 = document.getElementById('groupStudent2');
+        const input2 = document.getElementById('student2');
+        if (show) {
+            group2.style.display = 'block';
+            input2.required = true;
+        } else {
+            group2.style.display = 'none';
+            input2.required = false;
+            input2.value = '';
         }
     }
 
-    // 2. Normaliza os nomes para evitar duplicidades em ordens diferentes (ex: "Ana e João" vs "João e Ana")
+    // Carregar dados da planilha ao abrir
+    async function carregarDadosDoSheets() {
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const dados = await response.json();
+            registrosNaNuvem = Array.isArray(dados) ? dados : [];
+            atualizarContador();
+            atualizarTabelaProfessor();
+        } catch (error) {
+            console.error("Erro ao carregar dados:", error);
+        }
+    }
+
     function normalizarEquipe(nome) {
         return nome.toLowerCase()
                    .replace(/\s+/g, '')
@@ -392,100 +394,148 @@
                    .join('');
     }
 
-    // 3. Atualiza o contador de desafios restantes
     function atualizarContador() {
         const desafiosOcupados = registrosNaNuvem.map(r => r.desafio);
         const restantes = desafiosTotais.length - desafiosOcupados.length;
-        const badge = document.getElementById('counter-badge');
-        if(badge) {
-            badge.innerText = `Desafios Restantes: ${restantes} de ${desafiosTotais.length}`;
-        }
+        
+        document.getElementById('availableCount').innerText = Math.max(0, restantes);
+        document.getElementById('totalCount').innerText = desafiosTotais.length;
     }
 
-    // 4. Executa o sorteio e grava na planilha
-    async function sortearDesafio() {
-        const inputEquipe = document.getElementById('equipeInput');
-        const nomeEquipe = inputEquipe.value.trim();
+    // Submissão do Formulário
+    document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-        if (!nomeEquipe) {
-            alert("Por favor, digite o nome do integrante ou da dupla.");
-            return;
-        }
+        const btn = document.getElementById('btnSubmit');
+        const isDuo = document.querySelector('input[name="modality"]:checked').value === 'duo';
+        const s1 = document.getElementById('student1').value.trim();
+        const s2 = document.getElementById('student2').value.trim();
 
-        const btn = document.getElementById('btnSortear');
+        const nomeEquipe = isDuo ? `${s1} e ${s2}` : s1;
+
         btn.disabled = true;
         btn.innerText = "Sorteando e registrando...";
 
-        // Atualiza os dados antes de sortear para evitar colisão
         await carregarDadosDoSheets();
 
-        // Verifica se a equipe já possui registro
+        // Verificar duplicidades
         const chaveEquipe = normalizarEquipe(nomeEquipe);
-        const jaRegistrado = registrosNaNuvem.find(r => normalizarEquipe(r.equipe) === chaveEquipe);
+        const jaRegistrado = registrosNaNuvem.find(r => normalizarEquipe(r.equipe || '') === chaveEquipe);
 
         if (jaRegistrado) {
             exibirResultado(jaRegistrado.equipe, jaRegistrado.desafio, true);
             btn.disabled = false;
-            btn.innerText = "Sortear Desafio";
+            btn.innerText = "Registrar e Sortear Desafio";
             return;
         }
 
-        // Filtra os desafios ainda disponíveis
+        // Filtrar opções restantes
         const desafiosOcupados = registrosNaNuvem.map(r => r.desafio);
         const disponiveis = desafiosTotais.filter(d => !desafiosOcupados.includes(d));
 
         if (disponiveis.length === 0) {
-            alert("Todos os desafios já foram distribuídos para a turma!");
+            alert("Todos os desafios já foram sorteados para esta turma!");
             btn.disabled = false;
-            btn.innerText = "Sortear Desafio";
+            btn.innerText = "Registrar e Sortear Desafio";
             return;
         }
 
-        // Sorteio aleatório
+        // Realizar sorteio
         const indiceSorteado = Math.floor(Math.random() * disponiveis.length);
         const desafioSorteado = disponiveis[indiceSorteado];
 
-        // Envia para o Google Sheets
+        // Enviar para o Google Apps Script
         try {
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    modalidade: isDuo ? "Dupla" : "Individual",
                     equipe: nomeEquipe,
                     desafio: desafioSorteado
                 })
             });
 
-            // Atualiza memória local e UI
-            registrosNaNuvem.push({ equipe: nomeEquipe, desafio: desafioSorteado });
+            registrosNaNuvem.push({
+                modalidade: isDuo ? "Dupla" : "Individual",
+                equipe: nomeEquipe,
+                desafio: desafioSorteado
+            });
+
             atualizarContador();
+            atualizarTabelaProfessor();
             exibirResultado(nomeEquipe, desafioSorteado, false);
         } catch (err) {
-            alert("Erro ao salvar o desafio. Tente novamente.");
+            alert("Erro ao salvar no servidor. Tente novamente.");
             console.error(err);
         } finally {
             btn.disabled = false;
-            btn.innerText = "Sortear Desafio";
+            btn.innerText = "Registrar e Sortear Desafio";
         }
-    }
+    });
 
-    // 5. Exibe a tela com o resultado do sorteio
     function exibirResultado(equipe, desafio, jaExistia) {
-        document.getElementById('form-section').style.display = 'none';
-        const resultSection = document.getElementById('result-section');
-        resultSection.style.display = 'block';
+        document.getElementById('registrationForm').style.display = 'none';
+        const resultCard = document.getElementById('resultCard');
+        resultCard.style.display = 'block';
 
-        document.getElementById('resEquipe').innerText = equipe;
-        document.getElementById('resDesafio').innerText = desafio;
-
-        const aviso = document.getElementById('resAviso');
-        if (aviso) {
-            aviso.innerText = jaExistia ? "⚠️ Esta equipe já realizou o sorteio anteriormente." : "✅ Desafio registrado com sucesso!";
-        }
+        document.getElementById('resTeam').innerText = `Integrante(s): ${equipe}`;
+        document.getElementById('resChallengeTitle').innerText = desafio;
+        document.getElementById('resChallengeDesc').innerText = jaExistia 
+            ? "⚠️ Esta equipe já havia realizado o sorteio anteriormente." 
+            : "✅ Desafio sorteado e registrado com sucesso no banco de dados!";
     }
 
-    // Carrega os registros ao abrir a página
+    function resetView() {
+        document.getElementById('registrationForm').reset();
+        toggleMember2(true);
+        document.getElementById('resultCard').style.display = 'none';
+        document.getElementById('registrationForm').style.display = 'block';
+    }
+
+    function toggleTeacherPanel() {
+        const panel = document.getElementById('teacherPanel');
+        panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+    }
+
+    function atualizarTabelaProfessor() {
+        const tbody = document.getElementById('historyTableBody');
+        if (registrosNaNuvem.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum sorteio realizado ainda.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = registrosNaNuvem.map((r, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${r.modalidade || 'N/I'}</td>
+                <td>${r.equipe}</td>
+                <td>${r.desafio}</td>
+            </tr>
+        `).join('');
+    }
+
+    function exportToCSV() {
+        if (registrosNaNuvem.length === 0) {
+            alert("Não há dados para exportar.");
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,ID,Modalidade,Integrantes,Desafio Sorteado\n";
+        registrosNaNuvem.forEach((r, idx) => {
+            csvContent += `${idx + 1},"${r.modalidade || ''}","${r.equipe}","${r.desafio}"\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "Relatorio_Sorteios_CLP.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     window.onload = carregarDadosDoSheets;
 </script>
 </body>
