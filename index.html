@@ -42,7 +42,7 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             width: 100%;
-            max-width: 750px;
+            max-width: 800px;
             padding: 30px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
@@ -181,14 +181,25 @@
 
         .result-card h3 {
             color: var(--warning);
-            margin: 10px 0;
-            font-size: 1.1rem;
+            margin: 10px 0 5px 0;
+            font-size: 1.15rem;
         }
 
-        .result-card p {
-            color: var(--text-muted);
+        .result-card p.desc-text {
+            color: var(--text);
+            background-color: var(--card-bg);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid var(--accent);
+            margin: 10px 0 15px 0;
             line-height: 1.5;
             font-size: 0.95rem;
+        }
+
+        .result-card p.status-msg {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 15px;
         }
 
         .teacher-section {
@@ -293,7 +304,7 @@
     </p>
     
     <div class="counter-badge">
-        Desafios Disponíveis: <span id="availableCount">8</span> / <span id="totalCount">8</span>
+        Desafios Disponíveis: <span id="availableCount">20</span> / <span id="totalCount">20</span>
     </div>
 
     <!-- Mensagem em destaque quando os desafios acabarem -->
@@ -337,7 +348,8 @@
         <h2>Desafio Sorteado</h2>
         <div id="resTeam" style="font-weight: bold; margin-bottom: 10px; color: #fff;"></div>
         <h3 id="resChallengeTitle"></h3>
-        <p id="resChallengeDesc"></p>
+        <p id="resChallengeDesc" class="desc-text"></p>
+        <p id="resStatusMsg" class="status-msg"></p>
         <button type="button" class="btn-back" onclick="resetView()">Voltar ao Início / Novo Registro</button>
     </div>
 
@@ -353,11 +365,12 @@
                         <th>Modalidade</th>
                         <th>Integrantes</th>
                         <th>Desafio Sorteado</th>
+                        <th>Descrição</th>
                     </tr>
                 </thead>
                 <tbody id="historyTableBody">
                     <tr>
-                        <td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum sorteio realizado ainda.</td>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum sorteio realizado ainda.</td>
                     </tr>
                 </tbody>
             </table>
@@ -368,15 +381,28 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4I9Z7FxXWQIIa6P11qbgmV5GIrj0Z4TPQAcJNgMrMxt79wi5FTgjzBbjXe7j8MVbd7A/exec";
 
+    // Lista com os 20 desafios (Título e Descrição)
     const desafiosTotais = [
-        "Desafio 01: Semáforo de Cruzamento com Sensor de Presença",
-        "Desafio 02: Esteira Seletora de Caixas por Tamanho",
-        "Desafio 03: Controle de Nível de Reservatório de Água",
-        "Desafio 04: Sistema de Alarme com Chaveiro RFID e Barreira IR",
-        "Desafio 05: Portão Eletrônico Industrial com Fim de Curso",
-        "Desafio 06: Controle de Temperatura de Forno com Exaustor",
-        "Desafio 07: Sistema de Mistura e Envasamento de Alimentos",
-        "Desafio 08: Estacionamento Automatizado com Contador de Vagas"
+        { title: "Desafio 1: Semáforo Inteligente para Pedestres", desc: "Ao pressionar o botão, um temporizador (TON) aguarda 5s antes de fechar o sinal dos carros e abrir o de pedestres por 10s. Uma memória impede acionamentos repetidos." },
+        { title: "Desafio 2: Controle de Vagas de Estacionamento", desc: "Um contador UP/DOWN (CTUD) registra entradas e saídas. Ao atingir o limite (15 carros), uma memória aciona a sinalização de 'LOTADO' e bloqueia a entrada." },
+        { title: "Desafio 3: Porta Automática com Trava Noturna", desc: "Um sensor de presença aciona um temporizador (TOF) mantendo a porta aberta por 4s. Uma chave de 'Modo Noturno' (memória) bloqueia o sensor e trava a porta." },
+        { title: "Desafio 4: Secador de Mãos Automático", desc: "O sensor aciona o soprador imediatamente. Se um objeto estático for detectado por mais de 15s, um temporizador de segurança (TON) desliga o motor." },
+        { title: "Desafio 5: Catraca de Metrô com Timeout", desc: "A leitura do cartão libera a trava. Um contador registra os passageiros. Se a catraca não for girada em 7s, o temporizador expira e a trava é reativada." },
+        { title: "Desafio 6: Escada Rolante Economizadora", desc: "O sensor de entrada liga a escada. Um temporizador (TOF) de 20s mantém a escada rodando. Cada nova passagem reinicia a contagem de tempo." },
+        { title: "Desafio 7: Iluminação Temporizada de Garagem", desc: "A abertura do portão liga as luzes por 3 minutos (TOF). Se um botão de emergência for ativado (memória), a iluminação permanece acesa continuamente." },
+        { title: "Desafio 8: Irrigação Automática em Sequência", desc: "Um temporizador aciona a válvula 1 por 10s. Ao finalizar, ativa automaticamente a válvula 2 por 10s. Um contador acumula o total de ciclos executados." },
+        { title: "Desafio 9: Misturador Automático de Café", desc: "Selecionada a bebida, a válvula de água abre por 3s (TON). Em seguida, aciona-se o misturador por 5s. Uma memória impede um novo ciclo até a retirada do copo." },
+        { title: "Desafio 10: Ciclos de Lava-Jato Automático", desc: "Temporizadores em cascata controlam: 5s Água -> 8s Sabão -> 5s Enxágue -> 10s Secador. Um contador geral contabiliza a quantidade de veículos lavados." },
+        { title: "Desafio 11: Cancelas Duplas (Gaiola de Segurança)", desc: "O acionamento da Porta A impede (via memória de interlock) a abertura da Porta B. A Porta B só pode abrir 3s após a Porta A estar totalmente fechada." },
+        { title: "Desafio 12: Reservatório com Alternância de Bombas", desc: "Sensor de nível mínimo ativa o sistema. Um contador de pulsos alterna a chamada: ciclo ímpar ativa a Bomba 1, ciclo par ativa a Bomba 2." },
+        { title: "Desafio 13: Alarme Residencial Temporizado", desc: "Ao armar (memória), dá 15s para a saída. Ao detectar entrada, aguarda 10s para digitação de senha. Caso o tempo expire sem reset, a sirene toca." },
+        { title: "Desafio 14: Exaustor de Banheiro Comercial", desc: "A chave aciona a luz e o exaustor. Ao desligar a luz, uma memória dispara um temporizador (TOF) mantendo o exaustor ligado por mais 30s." },
+        { title: "Desafio 15: Misturador de Tintas por Pulsação", desc: "O operador escolhe o tempo total. O motor opera de forma pulsante (2s ligado, 1s desligado) em malha fechada até o tempo final expirar." },
+        { title: "Desafio 16: Esteira de Bagagens com Auto-Stop", desc: "Cada mala aciona um sensor fotoelétrico alimentando um temporizador (TOF) de 30s. Um contador registra a quantidade. Sem malas por 30s, a esteira para." },
+        { title: "Desafio 17: Elevador de Cargas de 2 Andares", desc: "Chamar no andar liga o motor no sentido correto até o fim de curso. Uma memória impede reversão abrupta e exige validação de porta fechada." },
+        { title: "Desafio 18: Compactador de Lixo Automático", desc: "Um sensor conta a entrada de 5 sacos (CTU). Ao atingir a contagem, a prensa avança (5s) e recua (5s), resetando o contador automaticamente." },
+        { title: "Desafio 19: Luzes de Emergência com Autoteste", desc: "Em operação normal, o sistema fica em espera. Um temporizador gera um ciclo automático de teste a cada 60s, acendendo as luzes por 3s." },
+        { title: "Desafio 20: Alimentador Automático para PETs", desc: "Um temporizador oscilador gera o intervalo entre refeições. Ao atingir o tempo, ativa a rosca sem-fim por 3s. Um contador limita a 4 dosagens diárias." }
     ];
 
     let registrosNaNuvem = [];
@@ -427,7 +453,6 @@
         const btn = document.getElementById('btnSubmit');
         const alertBox = document.getElementById('alertExhausted');
 
-        // Lógica de Desafios Esgotados
         if (countFinal === 0) {
             btn.disabled = true;
             btn.innerText = "Desafios Esgotados";
@@ -443,7 +468,6 @@
     document.getElementById('registrationForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        // Verificar se a modalidade foi selecionada
         const modalityOption = document.querySelector('input[name="modality"]:checked');
         if (!modalityOption) {
             alert("Por favor, selecione se a apresentação será em Dupla ou Individual.");
@@ -472,14 +496,19 @@
         const jaRegistrado = registrosNaNuvem.find(r => normalizarEquipe(r.equipe || '') === chaveEquipe);
 
         if (jaRegistrado) {
-            exibirResultado(jaRegistrado.equipe, jaRegistrado.desafio, true);
+            // Buscar o objeto do desafio correspondente pelo título
+            const desafioObj = desafiosTotais.find(d => d.title === jaRegistrado.desafio) || {
+                title: jaRegistrado.desafio,
+                desc: "Descrição não encontrada."
+            };
+            exibirResultado(jaRegistrado.equipe, desafioObj, true);
             atualizarContador();
             return;
         }
 
         // Filtrar opções restantes
-        const desafiosOcupados = registrosNaNuvem.map(r => r.desafio);
-        const disponiveis = desafiosTotais.filter(d => !desafiosOcupados.includes(d));
+        const titulosOcupados = registrosNaNuvem.map(r => r.desafio);
+        const disponiveis = desafiosTotais.filter(d => !titulosOcupados.includes(d.title));
 
         if (disponiveis.length === 0) {
             alert("Atenção: Todos os desafios já foram sorteados!");
@@ -487,11 +516,11 @@
             return;
         }
 
-        // Realizar sorteio
+        // Realizar sorteio de um objeto { title, desc }
         const indiceSorteado = Math.floor(Math.random() * disponiveis.length);
-        const desafioSorteado = disponiveis[indiceSorteado];
+        const objetoSorteado = disponiveis[indiceSorteado];
 
-        // Enviar para o Google Apps Script
+        // Enviar para o Google Apps Script (salvando apenas o título do desafio)
         try {
             await fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -500,19 +529,19 @@
                 body: JSON.stringify({
                     modalidade: isDuo ? "Dupla" : "Individual",
                     equipe: nomeEquipe,
-                    desafio: desafioSorteado
+                    desafio: objetoSorteado.title
                 })
             });
 
             registrosNaNuvem.push({
                 modalidade: isDuo ? "Dupla" : "Individual",
                 equipe: nomeEquipe,
-                desafio: desafioSorteado
+                desafio: objetoSorteado.title
             });
 
             atualizarContador();
             atualizarTabelaProfessor();
-            exibirResultado(nomeEquipe, desafioSorteado, false);
+            exibirResultado(nomeEquipe, objetoSorteado, false);
         } catch (err) {
             alert("Erro ao salvar no servidor. Tente novamente.");
             console.error(err);
@@ -521,14 +550,16 @@
         }
     });
 
-    function exibirResultado(equipe, desafio, jaExistia) {
+    function exibirResultado(equipe, desafioObj, jaExistia) {
         document.getElementById('registrationForm').style.display = 'none';
         const resultCard = document.getElementById('resultCard');
         resultCard.style.display = 'block';
 
         document.getElementById('resTeam').innerText = `Integrante(s): ${equipe}`;
-        document.getElementById('resChallengeTitle').innerText = desafio;
-        document.getElementById('resChallengeDesc').innerText = jaExistia 
+        document.getElementById('resChallengeTitle').innerText = desafioObj.title;
+        document.getElementById('resChallengeDesc').innerText = desafioObj.desc;
+        
+        document.getElementById('resStatusMsg').innerText = jaExistia 
             ? "⚠️ Esta equipe já havia realizado o sorteio anteriormente." 
             : "✅ Desafio sorteado e registrado com sucesso no banco de dados!";
     }
@@ -550,18 +581,23 @@
     function atualizarTabelaProfessor() {
         const tbody = document.getElementById('historyTableBody');
         if (registrosNaNuvem.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum sorteio realizado ainda.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum sorteio realizado ainda.</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = registrosNaNuvem.map((r, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${r.modalidade || 'N/I'}</td>
-                <td>${r.equipe}</td>
-                <td>${r.desafio}</td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = registrosNaNuvem.map((r, index) => {
+            const desafioObj = desafiosTotais.find(d => d.title === r.desafio);
+            const descricao = desafioObj ? desafioObj.desc : '—';
+            return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${r.modalidade || 'N/I'}</td>
+                    <td>${r.equipe}</td>
+                    <td>${r.desafio}</td>
+                    <td>${descricao}</td>
+                </tr>
+            `;
+        }).join('');
     }
 
     function exportToCSV() {
@@ -570,9 +606,11 @@
             return;
         }
 
-        let csvContent = "data:text/csv;charset=utf-8,ID,Modalidade,Integrantes,Desafio Sorteado\n";
+        let csvContent = "data:text/csv;charset=utf-8,ID,Modalidade,Integrantes,Desafio Sorteado,Descricao\n";
         registrosNaNuvem.forEach((r, idx) => {
-            csvContent += `${idx + 1},"${r.modalidade || ''}","${r.equipe}","${r.desafio}"\n`;
+            const desafioObj = desafiosTotais.find(d => d.title === r.desafio);
+            const descSanitizada = desafioObj ? `"${desafioObj.desc.replace(/"/g, '""')}"` : '""';
+            csvContent += `${idx + 1},"${r.modalidade || ''}","${r.equipe}","${r.desafio}",${descSanitizada}\n`;
         });
 
         const encodedUri = encodeURI(csvContent);
