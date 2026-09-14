@@ -365,12 +365,11 @@
                         <th>Modalidade</th>
                         <th>Integrantes</th>
                         <th>Desafio Sorteado</th>
-                        <th>Descrição</th>
                     </tr>
                 </thead>
                 <tbody id="historyTableBody">
                     <tr>
-                        <td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum sorteio realizado ainda.</td>
+                        <td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum sorteio realizado ainda.</td>
                     </tr>
                 </tbody>
             </table>
@@ -434,12 +433,20 @@
         }
     }
 
-    function normalizarEquipe(nome) {
+    // Normalização para comparar nomes sem diferenças de maiúsculas/espaços
+    function normalizarNome(nome) {
         return nome.toLowerCase()
-                   .replace(/\s+/g, '')
-                   .split(/e|&|\+|,/)
-                   .sort()
-                   .join('');
+                   .trim()
+                   .replace(/\s+/g, ' ');
+    }
+
+    // Extrai nomes individuais de uma string de equipe (ex: "a e b" -> ["a", "b"])
+    function extrairAlunos(stringEquipe) {
+        if (!stringEquipe) return [];
+        return stringEquipe.toLowerCase()
+                           .split(/\s*(?:e|&|\+|,)\s*/)
+                           .map(n => n.trim())
+                           .filter(n => n.length > 0);
     }
 
     function atualizarContador() {
@@ -483,6 +490,7 @@
             return;
         }
 
+        const novosAlunos = isDuo ? [normalizarNome(s1), normalizarNome(s2)] : [normalizarNome(s1)];
         const nomeEquipe = isDuo ? `${s1} e ${s2}` : s1;
 
         const btn = document.getElementById('btnSubmit');
@@ -491,17 +499,28 @@
 
         await carregarDadosDoSheets();
 
-        // Verificar se a equipe já realizou o sorteio antes
-        const chaveEquipe = normalizarEquipe(nomeEquipe);
-        const jaRegistrado = registrosNaNuvem.find(r => normalizarEquipe(r.equipe || '') === chaveEquipe);
+        // VALIDAÇÃO: Verifica se QUALQUER um dos alunos já está cadastrado em qualquer registro
+        let jaRegistrado = null;
+        let alunoConflituoso = "";
+
+        for (const reg of registrosNaNuvem) {
+            const alunosExistentes = extrairAlunos(reg.equipe || '');
+            for (const novoAluno of novosAlunos) {
+                if (alunosExistentes.includes(novoAluno)) {
+                    jaRegistrado = reg;
+                    alunoConflituoso = novoAluno;
+                    break;
+                }
+            }
+            if (jaRegistrado) break;
+        }
 
         if (jaRegistrado) {
-            // Buscar o objeto do desafio correspondente pelo título
             const desafioObj = desafiosTotais.find(d => d.title === jaRegistrado.desafio) || {
                 title: jaRegistrado.desafio,
                 desc: "Descrição não encontrada."
             };
-            exibirResultado(jaRegistrado.equipe, desafioObj, true);
+            exibirResultado(jaRegistrado.equipe, desafioObj, true, alunoConflituoso);
             atualizarContador();
             return;
         }
@@ -520,7 +539,7 @@
         const indiceSorteado = Math.floor(Math.random() * disponiveis.length);
         const objetoSorteado = disponiveis[indiceSorteado];
 
-        // Enviar para o Google Apps Script (salvando apenas o título do desafio)
+        // Enviar para o Google Apps Script
         try {
             await fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -550,7 +569,7 @@
         }
     });
 
-    function exibirResultado(equipe, desafioObj, jaExistia) {
+    function exibirResultado(equipe, desafioObj, jaExistia, alunoConflito) {
         document.getElementById('registrationForm').style.display = 'none';
         const resultCard = document.getElementById('resultCard');
         resultCard.style.display = 'block';
@@ -560,7 +579,7 @@
         document.getElementById('resChallengeDesc').innerText = desafioObj.desc;
         
         document.getElementById('resStatusMsg').innerText = jaExistia 
-            ? "⚠️ Esta equipe já havia realizado o sorteio anteriormente." 
+            ? `⚠️ O aluno "${alunoConflito}" já consta em um registro anterior (${equipe}). Exibindo o desafio original sorteado.` 
             : "✅ Desafio sorteado e registrado com sucesso no banco de dados!";
     }
 
@@ -578,28 +597,27 @@
         panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
     }
 
+    // Tabela do professor exibe apenas o título (sem a coluna de descrição na tela)
     function atualizarTabelaProfessor() {
         const tbody = document.getElementById('historyTableBody');
         if (registrosNaNuvem.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum sorteio realizado ainda.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Nenhum sorteio realizado ainda.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = registrosNaNuvem.map((r, index) => {
-            const desafioObj = desafiosTotais.find(d => d.title === r.desafio);
-            const descricao = desafioObj ? desafioObj.desc : '—';
             return `
                 <tr>
                     <td>${index + 1}</td>
                     <td>${r.modalidade || 'N/I'}</td>
                     <td>${r.equipe}</td>
                     <td>${r.desafio}</td>
-                    <td>${descricao}</td>
                 </tr>
             `;
         }).join('');
     }
 
+    // O arquivo CSV continua exportando a descrição do desafio
     function exportToCSV() {
         if (registrosNaNuvem.length === 0) {
             alert("Não há dados para exportar.");
