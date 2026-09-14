@@ -16,6 +16,7 @@
             --border: #334155;
             --success: #22c55e;
             --danger: #ef4444;
+            --warning: #f59e0b;
         }
 
         * {
@@ -70,6 +71,20 @@
             font-size: 0.85rem;
             margin-bottom: 20px;
             font-weight: bold;
+        }
+
+        .alert-exhausted {
+            display: none;
+            background-color: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            color: #fca5a5;
+            text-align: center;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+            animation: fadeIn 0.3s ease-in-out;
         }
 
         .form-group {
@@ -145,6 +160,7 @@
         .btn-submit:disabled {
             background-color: #475569;
             cursor: not-allowed;
+            opacity: 0.6;
         }
 
         .result-card {
@@ -164,7 +180,7 @@
         }
 
         .result-card h3 {
-            color: #f59e0b;
+            color: var(--warning);
             margin: 10px 0;
             font-size: 1.1rem;
         }
@@ -279,6 +295,11 @@
     <div class="counter-badge">
         Desafios Disponíveis: <span id="availableCount">8</span> / <span id="totalCount">8</span>
     </div>
+
+    <!-- Mensagem em destaque quando os desafios acabarem -->
+    <div id="alertExhausted" class="alert-exhausted">
+        🚫 Todos os desafios já foram sorteados para esta turma!
+    </div>
     
     <div class="counter-badge">
         <p class="subtitle" style="margin-bottom: 5px;">Playlist para aprender a utilizar o simulador do CLP real (visto no laboratório):</p>
@@ -287,25 +308,26 @@
     
     <form id="registrationForm">
         <div class="form-group">
-            <label>Modalidade de Trabalho:</label>
+            <label>Modalidade de Trabalho <span style="color: var(--danger);">*</span>:</label>
             <div class="radio-group">
                 <label class="radio-label">
-                    <input type="radio" name="modality" value="duo" checked onclick="toggleMember2(true)"> Em Dupla
+                    <input type="radio" name="modality" value="duo" required onclick="toggleMember2(true)"> Em Dupla
                 </label>
                 <label class="radio-label">
-                    <input type="radio" name="modality" value="solo" onclick="toggleMember2(false)"> Individual
+                    <input type="radio" name="modality" value="solo" required onclick="toggleMember2(false)"> Individual
                 </label>
             </div>
         </div>
 
         <div class="form-group">
-            <label for="student1">Nome do Aluno 1:</label>
+            <label for="student1">Nome do Aluno 1 <span style="color: var(--danger);">*</span>:</label>
             <input type="text" id="student1" placeholder="Digite o nome completo" required>
         </div>
 
-        <div class="form-group" id="groupStudent2">
-            <label for="student2">Nome do Aluno 2:</label>
-            <input type="text" id="student2" placeholder="Digite o nome completo" required>
+        <!-- Oculto por padrão até o aluno selecionar "Em Dupla" -->
+        <div class="form-group" id="groupStudent2" style="display: none;">
+            <label for="student2">Nome do Aluno 2 <span style="color: var(--danger);">*</span>:</label>
+            <input type="text" id="student2" placeholder="Digite o nome completo">
         </div>
 
         <button type="submit" id="btnSubmit" class="btn-submit">Registrar e Sortear Desafio</button>
@@ -397,35 +419,61 @@
     function atualizarContador() {
         const desafiosOcupados = registrosNaNuvem.map(r => r.desafio);
         const restantes = desafiosTotais.length - desafiosOcupados.length;
-        
-        document.getElementById('availableCount').innerText = Math.max(0, restantes);
+        const countFinal = Math.max(0, restantes);
+
+        document.getElementById('availableCount').innerText = countFinal;
         document.getElementById('totalCount').innerText = desafiosTotais.length;
+
+        const btn = document.getElementById('btnSubmit');
+        const alertBox = document.getElementById('alertExhausted');
+
+        // Lógica de Desafios Esgotados
+        if (countFinal === 0) {
+            btn.disabled = true;
+            btn.innerText = "Desafios Esgotados";
+            alertBox.style.display = "block";
+        } else {
+            btn.disabled = false;
+            btn.innerText = "Registrar e Sortear Desafio";
+            alertBox.style.display = "none";
+        }
     }
 
     // Submissão do Formulário
     document.getElementById('registrationForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const btn = document.getElementById('btnSubmit');
-        const isDuo = document.querySelector('input[name="modality"]:checked').value === 'duo';
+        // Verificar se a modalidade foi selecionada
+        const modalityOption = document.querySelector('input[name="modality"]:checked');
+        if (!modalityOption) {
+            alert("Por favor, selecione se a apresentação será em Dupla ou Individual.");
+            return;
+        }
+
+        const isDuo = modalityOption.value === 'duo';
         const s1 = document.getElementById('student1').value.trim();
         const s2 = document.getElementById('student2').value.trim();
 
+        if (isDuo && !s2) {
+            alert("Por favor, preencha o nome do segundo aluno.");
+            return;
+        }
+
         const nomeEquipe = isDuo ? `${s1} e ${s2}` : s1;
 
+        const btn = document.getElementById('btnSubmit');
         btn.disabled = true;
         btn.innerText = "Sorteando e registrando...";
 
         await carregarDadosDoSheets();
 
-        // Verificar duplicidades
+        // Verificar se a equipe já realizou o sorteio antes
         const chaveEquipe = normalizarEquipe(nomeEquipe);
         const jaRegistrado = registrosNaNuvem.find(r => normalizarEquipe(r.equipe || '') === chaveEquipe);
 
         if (jaRegistrado) {
             exibirResultado(jaRegistrado.equipe, jaRegistrado.desafio, true);
-            btn.disabled = false;
-            btn.innerText = "Registrar e Sortear Desafio";
+            atualizarContador();
             return;
         }
 
@@ -434,9 +482,8 @@
         const disponiveis = desafiosTotais.filter(d => !desafiosOcupados.includes(d));
 
         if (disponiveis.length === 0) {
-            alert("Todos os desafios já foram sorteados para esta turma!");
-            btn.disabled = false;
-            btn.innerText = "Registrar e Sortear Desafio";
+            alert("Atenção: Todos os desafios já foram sorteados!");
+            atualizarContador();
             return;
         }
 
@@ -469,7 +516,6 @@
         } catch (err) {
             alert("Erro ao salvar no servidor. Tente novamente.");
             console.error(err);
-        } finally {
             btn.disabled = false;
             btn.innerText = "Registrar e Sortear Desafio";
         }
@@ -489,9 +535,11 @@
 
     function resetView() {
         document.getElementById('registrationForm').reset();
-        toggleMember2(true);
+        document.getElementById('groupStudent2').style.display = 'none';
+        document.getElementById('student2').required = false;
         document.getElementById('resultCard').style.display = 'none';
         document.getElementById('registrationForm').style.display = 'block';
+        atualizarContador();
     }
 
     function toggleTeacherPanel() {
